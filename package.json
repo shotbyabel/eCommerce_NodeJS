@@ -1,0 +1,17 @@
+{
+  "name": "ecommerce_nodejs",
+  "version": "1.0.0",
+  "description": "e-commerce web app with NodeJs",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Abel Alejandro H",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt-nodejs": "0.0.3",
+    "express": "^4.13.4",
+    "mongoose": "^4.4.3",
+    "morgan": "^1.6.1"
+  }
+}
