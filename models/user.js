@@ -2,7 +2,7 @@
       bcrypt      =   require('bcrypt-nodejs'),
       Schema      =   mongoose.Schema;
 
-    //1. U S E R  - S C H E M A - A T T R I B U T E  F I E L D S
+//**1. U S E R  - S C H E M A - A T T R I B U T E  F I E L D S
 var UserSchema = new Schema({
 
   email: {
@@ -34,7 +34,7 @@ var UserSchema = new Schema({
   }]
 });
 
-//2. H A S H / S A V E -  P A S S W O R D - before saving to databse
+//**2. H A S H / S A V E -  P A S S W O R D - before saving to databse
 UserSchema.pre('save', function(next) {//pre is a mongoose method
   //BEFORE we save it into the DB we need to do the following
   var user = this; // cretea a new object that refers to THIS UserSchema(just an object)
@@ -49,12 +49,13 @@ UserSchema.pre('save', function(next) {//pre is a mongoose method
   });
 });
 
-//3. C O M P A R E  P A S S W O R D in DB to USER INPUTS
+//**3. C O M P A R E  P A S S W O R D in DB to USER INPUTS
 UserSchema.methods.comparePassword = function(password) {
   return bcrypt.compareSync(password, this.password); //bcrypt method to handle comparing
 } //methods created by me
 
-module.exports = mongoose.model('User, UserSchema');//export the whole schema so other files can use it.
+///MODULE EXPORTING
+module.exports = mongoose.model('User', UserSchema);//export the whole schema so other files can use it.
 
 
 
