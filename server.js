@@ -1,13 +1,16 @@
-var express     = require('express'),
-    morgan      = require('morgan'),//logs HTTP methods on our terminal
-    mongoose    = require('mongoose'),
-    bodyParser  = require('body-parser'),
-    ejs         = require('ejs'),
-    engine      = require('ejs-mate'),
+var express       = require('express'),
+    morgan        = require('morgan'),//logs HTTP methods on our terminal
+    mongoose      = require('mongoose'),
+    bodyParser    = require('body-parser'),
+    ejs           = require('ejs'),
+    engine        = require('ejs-mate'),
+    session       = require('express-session'), //
+    cookieParser  = require('cookie-parser'),//store session IDs for users
+    flash         = require('express-flash'),
 
-    User        = require('./models/user'),
+    User          = require('./models/user'),
 
-    app         = express();//app is refering to the express object.
+    app           = express();//app is refering to the express object.
 
     mongoose.connect('mongodb://root:fuckOaxaca001@ds061325.mongolab.com:61325/ecommerce_abel', function(err) {
       if (err) {
@@ -18,17 +21,27 @@ var express     = require('express'),
 
     });
     
-
-//M I D D L E W A R E
+////////////////////////////////////////////////////
+// - M I D D L E W A R E -
 app.use(express.static(__dirname + '/public'));//tell express to serve static files
 app.use(morgan('dev'));
 app.use(bodyParser.json());//express app can now parse JSON data! 
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(cookieParser());
+app.use(session({
+  resave: true,
+  saveUninitialized: true,
+  secret: "llrLsIIora"
+}));
+app.use(flash());
+
 //set our engines
 app.engine('ejs', engine); //
 app.set('view engine', 'ejs'); //
 
-//R O U T E S required from model.exports
+/////////////////////////////////////////////////
+// - R O U T E S - required from model.exports
 var mainRoutes = require('./routes/main-route');
 var userRoutes = require('./routes/user-route.js');
 app.use(mainRoutes);

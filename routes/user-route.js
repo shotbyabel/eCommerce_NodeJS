@@ -3,7 +3,9 @@ var router  = require('express').Router(),
 
 
 router.get('/signup', function(req, res, next) {
-  res.render('accounts/signup')
+  res.render('accounts/signup', {
+    errors: req.flash('errors')
+  });
 });    
 
 
@@ -20,13 +22,14 @@ router.post('/signup', function(req, res, next) {
   }, function(err, existingUser) {
 
     if (existingUser) {
-      console.log(req.body.email + " already exist");
+      req.flash('errors', 'That e-mail has already been registed');
+      // console.log(req.body.email + " already exist");//server side error handling
       return res.redirect('/signup');
     } else {
       user.save(function(err, user) {
         if (err) return next(err); //callback from function argument next
-
-        res.json('New user was created!');
+        return res.redirect('/');
+        // res.json('New user was created!'); for postman testing
       });
     }
   }); //mongoose query 
