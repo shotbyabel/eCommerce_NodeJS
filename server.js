@@ -8,11 +8,12 @@ var express       = require('express'),
     cookieParser  = require('cookie-parser'),//store session IDs for users
     flash         = require('express-flash'),
 
+    secret        = require('./config/secret'),
     User          = require('./models/user'),
 
     app           = express();//app is refering to the express object.
 
-    mongoose.connect('mongodb://root:fuckOaxaca001@ds061325.mongolab.com:61325/ecommerce_abel', function(err) {
+    mongoose.connect(secret.database, function(err) {
       if (err) {
         console.log(err);
       } else {
@@ -32,9 +33,11 @@ app.use(cookieParser());
 app.use(session({
   resave: true,
   saveUninitialized: true,
-  secret: "llrLsIIora"
+  secret: secret.secretKey
 }));
 app.use(flash());
+
+
 
 //set our engines
 app.engine('ejs', engine); //
@@ -48,9 +51,9 @@ app.use(mainRoutes);
 app.use(userRoutes);
 
 // listen method: We are running the server on port 3000
-app.listen(3000, function(err) { // error handlers are good practice
+app.listen(secret.port, function(err) { // error handlers are good practice
   if (err) throw err;
-  console.log("NodeJs Oh how I missed ya!<3"); //check when it does work
+  console.log("Nodemon Server running on " + secret.port); //check when it does work
 });
 
 ///TESTING  ON  P O S T M A N
