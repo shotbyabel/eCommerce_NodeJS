@@ -1,3 +1,4 @@
+//IGNORE THIS
 var passport      = require('passport'), //authentication
     LocalStrategy = require('passport-local').Strategy(); //for local login
 
