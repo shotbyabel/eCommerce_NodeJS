@@ -1,15 +1,21 @@
-var express     = require('express'),
-    morgan      = require('morgan'),//logs HTTP methods on our terminal
-    mongoose    = require('mongoose'),
-    bodyParser  = require('body-parser'),
-    ejs         = require('ejs'),
-    engine      = require('ejs-mate'),
+var express       = require('express'),
+    morgan        = require('morgan'),//logs HTTP methods on our terminal
+    mongoose      = require('mongoose'),
+    bodyParser    = require('body-parser'),
+    ejs           = require('ejs'),
+    engine        = require('ejs-mate'),
+    session       = require('express-session'), //
+    cookieParser  = require('cookie-parser'),//store session IDs for users
+    flash         = require('express-flash'),
+    MongoStore    = require('connect-mongo')(session), //to store session on server side
+    passport      = require('passport'),
 
-    User        = require('./models/user'),
+    secret        = require('./config/secret'),
+    User          = require('./models/user'),
 
-    app         = express();//app is refering to the express object.
+    app           = express();//app is refering to the express object.
 
-    mongoose.connect('mongodb://root:fuckOaxaca001@ds061325.mongolab.com:61325/ecommerce_abel', function(err) {
+    mongoose.connect(secret.database, function(err) {
       if (err) {
         console.log(err);
       } else {
@@ -18,26 +24,39 @@ var express     = require('express'),
 
     });
     
-
-//M I D D L E W A R E
+////////////////////////////////////////////////////
+// - M I D D L E W A R E -
 app.use(express.static(__dirname + '/public'));//tell express to serve static files
 app.use(morgan('dev'));
 app.use(bodyParser.json());//express app can now parse JSON data! 
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(cookieParser());
+app.use(session({
+  resave: true,
+  saveUninitialized: true,
+  secret: secret.secretKey,
+  store: new MongoStore({ url: secret.database, autoReconnect: true})
+}));
+app.use(flash());
+
+
+
 //set our engines
 app.engine('ejs', engine); //
 app.set('view engine', 'ejs'); //
 
-//R O U T E S required from model.exports
+/////////////////////////////////////////////////
+// - R O U T E S - required from model.exports
 var mainRoutes = require('./routes/main-route');
 var userRoutes = require('./routes/user-route.js');
 app.use(mainRoutes);
 app.use(userRoutes);
 
 // listen method: We are running the server on port 3000
-app.listen(3000, function(err) { // error handlers are good practice
+app.listen(secret.port, function(err) { // error handlers are good practice
   if (err) throw err;
-  console.log("NodeJs Oh how I missed ya!<3"); //check when it does work
+  console.log("Nodemon Server running on " + secret.port); //check when it does work
 });
 
 ///TESTING  ON  P O S T M A N
