@@ -36,3 +36,11 @@ passport.user('local-login', new LocalStrategy({ //add an instance of localStrat
 
 
 //F U N C T I O N for V A L I D A T I O N 
+exports.isAuthenticated = function(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect('/login');
+}
+
+
