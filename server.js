@@ -7,7 +7,7 @@ var express       = require('express'),
     session       = require('express-session'), //
     cookieParser  = require('cookie-parser'),//store session IDs for users
     flash         = require('express-flash'),
-    MongoStore    = require('connect-mongo')(session), //to store session on server side
+    MongoStore    = require('connect-mongo/es5')(session), //to store session on server side
     passport      = require('passport'),
 
     secret        = require('./config/secret'),
@@ -39,8 +39,13 @@ app.use(session({
   store: new MongoStore({ url: secret.database, autoReconnect: true})
 }));
 app.use(flash());
-
-
+app.use(passport.initialize()); //tell express to use it
+app.use(passport.session()); //need it for serialize and deserialize
+//all routes will have user object by default
+app.use(function(req, res, next) {
+  res.locals.user = req.user;
+  next();
+});
 
 //set our engines
 app.engine('ejs', engine); //

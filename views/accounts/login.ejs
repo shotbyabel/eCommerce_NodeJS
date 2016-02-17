@@ -1,0 +1,38 @@
+
+<% layout('layout') -%>
+
+<div class="row">
+  <div class="col-lg-6 col-md-offset-3"> <!-- forms in middle -->
+
+<!-- Express-Flash Error handling -->
+    <% if (message.length > 0) { %>
+      <div class="alert alert-danger alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+          <%= message %>
+      </div>
+    <% } %> 
+<!-- * E N D * Express-Flash Error handling * E N D * -->
+
+      <form method="post">
+
+      <h3>L O G I N</h3>
+      
+        <div class="form-group">
+        <label name"">EMAIL</label>
+          <input type="email" class="form-control" name="email"></input>
+        </div>
+
+        <div class="form-group">
+        <label name"">PASSWORD</label>
+          <input type="password" class="form-control" name="password"></input>        
+        </div> <!-- end form-group  -->
+
+          <button type="submit" class="btn btn-success">SUBMIT</button>
+      
+      </form> <!-- form end -->
+
+        
+  </div>  <!-- col closed -->
+</div> <!-- row closed -->

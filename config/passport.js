@@ -1,11 +1,12 @@
 //IGNORE THIS
 var passport      = require('passport'), //authentication
-    LocalStrategy = require('passport-local').Strategy(); //for local login
+    LocalStrategy = require('passport-local').Strategy; //for local login
+    User          = require('../models/user');
 
 
 // S E R I A L I Z E  && D E S E R I A L I Z E
 passport.serializeUser(function(user, done) {
-  done.(null, user._id);
+  done(null, user._id);
 });
 
 passport.deserializeUser(function (id, done) {
@@ -15,7 +16,7 @@ passport.deserializeUser(function (id, done) {
 });
 
 // M I D D L E W A R E 
-passport.user('local-login', new LocalStrategy({ //add an instance of localStrategy
+passport.use('local-login', new LocalStrategy({ //add an instance of localStrategy
   usernameField: 'email',
   passwordField: 'password',
   passReqToCallback: true
