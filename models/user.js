@@ -1,5 +1,6 @@
   var mongoose    =   require('mongoose'),
       bcrypt      =   require('bcrypt-nodejs'),
+      crypto      =   require('crypto'),
       Schema      =   mongoose.Schema;
 
 //**1. U S E R  - S C H E M A - A T T R I B U T E  F I E L D S
@@ -54,6 +55,13 @@ UserSchema.methods.comparePassword = function(password) {
   return bcrypt.compareSync(password, this.password); //bcrypt method to handle comparing
 } //methods created by me
 
+//G R A V A T A R  P H O T O 
+UserSchema.methods.gravatar = function(size) {
+  if (!this.size) size = 100;
+  if (!this.email) return 'https://gravatar.com/avatar/?s' + size + '&d=retro'; //gravatar API
+  var md5 = crypto.createHash('md5').update(this.email).digest('hex');//unique to each user.. photo..
+  return 'https://gravatar.com/avatar/' + md5 + '?s=' + size + '&d=retro';//add md5 to the api. only to user.. 
+}
 ///MODULE EXPORTING
 module.exports = mongoose.model('User', UserSchema);//export the whole schema so other files can use it.
 

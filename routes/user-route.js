@@ -55,10 +55,10 @@ router.post('/signup', function(req, res, next) {
       // console.log(req.body.email + " already exist");//server side error handling
       return res.redirect('/signup');
     } else {
-      user.save(function(err, user) {
+      user.save(function(err, user) {//user obect based of what it was crteated.
         if (err) return next(err); //callback from function argument next
 
-        req.logIn(user, function(err) {
+        req.logIn(user, function(err) {//adding session to server and cookie to browser with the logIn()..
           if (err) return next(err);
           res.redirect('/profile');
            // res.json('New user was created!'); for postman testing
@@ -73,6 +73,31 @@ router.get('/logout', function(req, res, next) {
   req.logout();
   res.redirect('/');
 });
+
+//E D I T - responding a view with the extra data 
+router.get('/edit-profile', function(req, res, next) {
+  res.render('accounts/edit-profile', { message: req.flash('success')});
+});
+
+// 
+router.post('/edit-profile', function(req, res, next) {
+  User.findOne({ _id: req.user._id }, function(err, user) { //*find user with same ID as current logged in user
+
+    if (err) return next(err);
+
+     if (req.body.name) user.profile.name = req.body.name; //allow to replace data to the DB.. 
+    if (req.body.address) user.address = req.body.address;
+
+    user.save(function(err) { //allow to save users data
+      if (err) return next(err);
+      req.flash('success', 'Successfully Edited your profile');
+      return res.redirect('/edit-profile');
+    });
+  });
+});
+
+
+
 
 
 module.exports = router;
