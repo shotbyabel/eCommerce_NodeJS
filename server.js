@@ -12,6 +12,7 @@ var express       = require('express'),
 
     secret        = require('./config/secret'),
     User          = require('./models/user'),
+    Category      = require('./models/category'),
 
     app           = express();//app is refering to the express object.
 
@@ -41,10 +42,20 @@ app.use(session({
 app.use(flash());
 app.use(passport.initialize()); //tell express to use it
 app.use(passport.session()); //need it for serialize and deserialize
+
 //all routes will have user object by default
 app.use(function(req, res, next) {
   res.locals.user = req.user;
   next();
+});
+
+//middleware for category queries
+app.use(function(req, res, next) {
+  Category.find({}, function(err, categories) {//find SPECIFIC category search query ={} or you want to find all
+    if (err) return next(err);
+    res.locals.categories = categories;//then store the list of categories in a local var 'categories'
+    next();//callback
+  });
 });
 
 //set our engines
@@ -54,10 +65,16 @@ app.set('view engine', 'ejs'); //
 /////////////////////////////////////////////////
 // - R O U T E S - required from model.exports
 var mainRoutes = require('./routes/main-route');
-var userRoutes = require('./routes/user-route.js');
+var userRoutes = require('./routes/user-route');
+//*Admin Routes*
+var adminRoutes = require('./routes/admin-route');
+
+var apiRoutes  = require('./api/api');
+
 app.use(mainRoutes);
 app.use(userRoutes);
-
+app.use(adminRoutes);
+app.use('/api', apiRoutes);
 // listen method: We are running the server on port 3000
 app.listen(secret.port, function(err) { // error handlers are good practice
   if (err) throw err;
