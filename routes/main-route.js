@@ -1,12 +1,38 @@
 var router    = require('express').Router();
 var User      = require('../models/user');
 var Product   = require('../models/product');
+//////////////////////////////////////////////////////////////////////////////////
+// createMapping is method to connect Product database to Elastic Search
+Product.createMapping(function(err, mapping) {
+  if (err) {
+    console.log("error creating mapping");
+    console.log(err);
+  } else {
+    console.log("Mapping created");
+    console.log(mapping);
+  }
+});
 
+// //THREE methods.. count the docs..close the count.. errors
+var stream = Product.synchronize(); //syncs whole product in the elastic search replica set(replicate all data and put in in Elasti Search)
+var count = 0;
+//
+stream.on('data', function() {
+  count++;
+});
 
+stream.on('close', function() {
+  console.log("Indexed " + count + " documents");
+});
+
+stream.on('error', function(err) {
+  console.log(err);
+});
+////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////
 router.get('/', function(req, res) {
   res.render('main/home');
 })
-
 // router.get('/users', function(req, res) {
 //   User.find({}, function(err, users) {
 //     res.json(users);
