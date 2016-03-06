@@ -13,6 +13,7 @@ var express       = require('express'),
     secret        = require('./config/secret'),
     User          = require('./models/user'),
     Category      = require('./models/category'),
+    // Product       = require('./models/product'),
 
     app           = express();//app is refering to the express object.
 

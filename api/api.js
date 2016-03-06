@@ -3,7 +3,7 @@ var router = require('express').Router(),
   faker = require('faker'),
 
   Category = require('../models/category'),
-  Product = require('../models/products');
+  Product = require('../models/product');
 
 
 router.get('/:name', function(req, res, next) {//1**search category based on name WE type in the url
