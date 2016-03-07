@@ -1,6 +1,28 @@
 var router    = require('express').Router();
 var User      = require('../models/user');
 var Product   = require('../models/product');
+
+function paginate(req, res, next) {
+
+  var perPage = 9;
+  var page = req.params.page;
+
+  Product
+    .find()
+    .skip(perPage * page) //skips the amount of documents 9 x 2 = 18
+    .limit(perPage) //limit how many products/docs we wamnt per query..(9)
+    .populate('category')
+    .exec(function(err, products) {
+      if (err) return next(err);
+      Product.count().exec(function(err, count) { //mongoose method '.count()' to count how many documents in product db 
+         if (err) return next(err);
+        res.render('main/product-main', {
+          products: products,
+          pages: count / perPage //count products and divide it by 9
+        });
+      });
+    });
+}
 //////////////////////////////////////////////////////////////////////////////////
 // createMapping is method to connect Product database to Elastic Search
 Product.createMapping(function(err, mapping) {
@@ -12,7 +34,6 @@ Product.createMapping(function(err, mapping) {
     console.log(mapping);
   }
 });
-
 // //THREE methods.. count the docs..close the count.. errors
 var stream = Product.synchronize(); //syncs whole product in the elastic search replica set(replicate all data and put in in Elasti Search)
 var count = 0;
@@ -58,14 +79,23 @@ router.get('/search', function(req, res, next) { //RETREIVE data from post route
 })
 ////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////
-router.get('/', function(req, res) {
-  res.render('main/home');
-})
-// router.get('/users', function(req, res) {
-//   User.find({}, function(err, users) {
-//     res.json(users);
-//   })
-// })
+router.get('/', function(req, res, next) {
+  //**update home route to add PAGINATION**
+  if (req.user) {
+    paginate(req, res, next); //**ADD THIS FUNCTION from above***
+  } else {
+    res.render('main/home');//if user is NOT logged in render the regular home page..
+  }
+
+});
+
+////////NEW PAGE ROUTE FOR//// product-main.ejs pagination route
+router.get('/page/:page', function(req, res, next) {
+  //<li><a href="/page/<%= i %>"><%= i %></a></li>
+  paginate(req, res, next);
+
+});
+
 
 //first we get route with url name and we added a param ':id'
 router.get('/products/:id', function(req, res, next) {
@@ -95,3 +125,9 @@ router.get('/product/:id', function(req, res, next) {//QUERY based on id(particu
 });
 
 module.exports = router;
+
+// router.get('/users', function(req, res) {
+//   User.find({}, function(err, users) {
+//     res.json(users);
+//   })
+// })
