@@ -28,6 +28,34 @@ stream.on('close', function() {
 stream.on('error', function(err) {
   console.log(err);
 });
+//////////////////////////////////////////////////////////
+//S E A R C H  R O U T E S: go to search route and pass req.body.q.
+router.post('/search', function(req, res, next) {
+  res.redirect('/search?q=' + req.body.q);
+});
+
+//req.query is usually to access data in search?q= "the name of the query"
+
+router.get('/search', function(req, res, next) { //RETREIVE data from post route above..
+  if (req.query.q) {
+    Product.search({ //search the req.query value
+      query_string: {
+        query: req.query.q //it will search ElasticSeach replica set
+      }
+    }, function(err, results) {
+      if (err) return next(err);
+      //return our results: we do the code below so that we don't get a big nested object. only the whats in SECOND hits:{ _source }
+      //that's why we are using .map = so we can STORE it in a new array []
+      var data = results.hits.hits.map(function(hit) {
+        return hit;
+      });
+      res.render('main/search-result', {
+        query: req.query.q,
+        data: data //the var data = results....
+      });
+    });
+  }
+})
 ////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////
 router.get('/', function(req, res) {
