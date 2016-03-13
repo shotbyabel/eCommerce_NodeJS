@@ -34,6 +34,7 @@ Product.createMapping(function(err, mapping) {
     console.log(mapping);
   }
 });
+
 // //THREE methods.. count the docs..close the count.. errors
 var stream = Product.synchronize(); //syncs whole product in the elastic search replica set(replicate all data and put in in Elasti Search)
 var count = 0;
@@ -49,6 +50,28 @@ stream.on('close', function() {
 stream.on('error', function(err) {
   console.log(err);
 });
+
+//////////////////////////////////////////////////////////
+//C A R T - R O U T E S:
+router.post('/product/:product_id', function(req, res, next) {
+      //find owner of the cart!
+      Cart.findOne({
+          owner: req.user._id
+        }, function(err, cart) {
+          cart.items.push({ //push items based on req.body we want to buy (item is an array)
+            item: req.body.product_id,
+            price: parseInt(req.body.priceValue), //parseInt
+            quantity: parseInt(req.body.quantity)
+          });
+          //parse value of the req.body to a float data type: saving to DB wont show errors(playing it safe)
+          cart.total = (cart.total + parseFloat(req.body.priceValue)).toFixed(2);
+          //save it to the cart DB
+          cart.save(function(err) {
+            if (err) return next(err);
+            return res.redirect('/cart');
+          });
+        });
+      });
 //////////////////////////////////////////////////////////
 //S E A R C H  R O U T E S: go to search route and pass req.body.q.
 router.post('/search', function(req, res, next) {
