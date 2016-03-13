@@ -67,7 +67,6 @@
     $('#priceValue').val(priceValue.toFixed(2));
     $('#total').html(quantity); //show user what's the current quanity amount.
   });
-
   ////SUBTRACT BUTTON
   //button target with id of minus now 
   $(document).on('click', '#minus', function(e) {
@@ -75,8 +74,7 @@
     // parse value of text.. to do some calculations. 
     var priceValue = parseFloat($('#priceValue').val()); //priceValue from our product.ejs 
     var quantity = parseInt($('#quantity').val()); // //quantity from our product.ejs   
-
-
+//PREVENT subtracting items/product past `1`
     if (quantity == 1) {
       priceValue = $('#priceHidden').val(); //value will always be original 1
       quantity = 1;
@@ -84,7 +82,6 @@
       priceValue -= parseFloat($('#priceHidden').val());
       quantity -= 1; //minimumy you can subtract is 1
     }
-
     //REPLACE previous html values with the NEW ones created with the Increments
     $('#quantity').val(quantity); //the hidden input 
     // $('#priceValue').val(priceValue.toFixed(2));

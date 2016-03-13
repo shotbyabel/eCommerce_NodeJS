@@ -1,6 +1,7 @@
 var router    = require('express').Router();
 var User      = require('../models/user');
 var Product   = require('../models/product');
+var Cart      = require('../models/cart');
 
 function paginate(req, res, next) {
 
@@ -53,6 +54,24 @@ stream.on('error', function(err) {
 
 //////////////////////////////////////////////////////////
 //C A R T - R O U T E S:
+
+router.get('/cart', function(req, res, next) {
+  Cart
+  //SEARCH in the db if  req.user._id exist or not
+    .findOne({
+      owner: req.user._id
+    })
+    .populate('items.item')//populate image, name, price 
+    .exec(function(err, foundCart) {
+      if (err) return next(err);
+      res.render('main/cart', {//render view of the owner/user cart
+        foundCart: foundCart,//we are looping cart object in cart.ejs
+        message: req.flash('remove')
+      });
+    });
+});
+
+//this POST Method will run when user push "Add to Cart" button on product.ejs
 router.post('/product/:product_id', function(req, res, next) {
       //find owner of the cart!
       Cart.findOne({
@@ -72,6 +91,26 @@ router.post('/product/:product_id', function(req, res, next) {
           });
         });
       });
+
+//Remove Item from CART Route
+
+router.post('/remove', function(req, res, next) {
+  //*ir order to remove the item we must get it's _id
+  Cart.findOne({
+     owner: req.user._id
+  }, function(err, foundCart) {
+    //once the item is found we pull it.. 
+    foundCart.items.pull(String(req.body.item));
+//subtract the total price once item has been removed from cart
+    foundCart.total = (foundCart.total - parseFloat(req.body.price)).toFixed(2);
+    foundCart.save(function(err, found) {
+      if (err) return next(err);
+      req.flash('remove', 'Item was removed from your cart');
+      res.redirect('/cart');
+    });
+  });
+});
+
 //////////////////////////////////////////////////////////
 //S E A R C H  R O U T E S: go to search route and pass req.body.q.
 router.post('/search', function(req, res, next) {
