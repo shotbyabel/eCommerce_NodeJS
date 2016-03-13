@@ -1,6 +1,8 @@
 
 var router        = require('express').Router(),
     User          = require('../models/user'),
+    Cart          = require('../models/cart'),
+    async         = require('async'),
 
     passport      = require('passport'),
     passportConf  = require('../config/passport');  
@@ -31,6 +33,8 @@ router.get('/profile', function(req, res, next) {
 // router.get('/profile', function(req, res) {
 //   res.json(req.user);
 // })
+
+//**MODIFY** signup Route to include shopping-cart
 router.get('/signup', function(req, res, next) {
   res.render('accounts/signup', {
     errors: req.flash('errors')
@@ -39,34 +43,52 @@ router.get('/signup', function(req, res, next) {
 
 //S I G N  U P - R O U T E S
 router.post('/signup', function(req, res, next) {
-  var user = new User();
 
-  user.profile.name = req.body.name;//based of our models->user.js Schema
-  user.email = req.body.email;
-  user.password = req.body.password;
-  user.profile.picture = user.gravatar();
- // VALIDATION
-  User.findOne({
-    email: req.body.email
-  }, function(err, existingUser) {
+  //*MOD 2-
+  async.waterfall([
+      function(callback) {
+        //*MOD-4 Move entire signup logic to here..
+        var user = new User();
 
-    if (existingUser) {
-      req.flash('errors', 'Account with that email address already exists');
-      // console.log(req.body.email + " already exist");//server side error handling
-      return res.redirect('/signup');
-    } else {
-      user.save(function(err, user) {//user obect based of what it was crteated.
-        if (err) return next(err); //callback from function argument next
+        user.profile.name = req.body.name; //based of our models->user.js Schema
+        user.email = req.body.email;
+        user.password = req.body.password;
+        user.profile.picture = user.gravatar();
+        // VALIDATION
+        User.findOne({
+          email: req.body.email
+        }, function(err, existingUser) {
 
-        req.logIn(user, function(err) {//adding session to server and cookie to browser with the logIn()..
+          if (existingUser) {
+            req.flash('errors', 'Account with that email address already exists');
+            // console.log(req.body.email + " already exist");//server side error handling
+            return res.redirect('/signup');
+          } else {
+            user.save(function(err, user) { //user obect based of what it was crteated.
+              if (err) return next(err); //callback from function argument next    
+              callback(null, user); //*MOD 1-
+
+            });
+          }
+        });
+      },
+
+      function(user) {
+        //*MOD 5 new***
+        var cart = new Cart();
+        cart.owner = user._id;
+        cart.save(function(err) {
           if (err) return next(err);
-          res.redirect('/profile');
-           // res.json('New user was created!'); for postman testing
+          //*MOD 3- Moved from signup() 
+          req.logIn(user, function(err) { //adding session to server and cookie to browser with the logIn()..
+            if (err) return next(err);
+            res.redirect('/profile');
+            // res.json('New user was created!'); for postman testing
+          })
         })
-      });
-    }
-  });
-});
+      }
+    ]) //waterfall close
+});//sing up post Func()
 
 //L O G O U T
 router.get('/logout', function(req, res, next) {
