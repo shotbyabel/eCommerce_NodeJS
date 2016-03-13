@@ -5,6 +5,23 @@ var router = require('express').Router(),
   Category = require('../models/category'),
   Product = require('../models/product');
 
+   /////////////////////////////////////// 
+  //S E A R C H - API  R O U T E 
+
+router.post('/search', function(req, res, next) {//*1 url as search (different endPoint than in main-route.js)
+  console.log(req.body.search_term);
+  Product.search({ //*2 mongoosastic .search method : to search for product! 
+    query_string: {
+      query: req.body.search_term//3* will search based on what we input (body.search_term)
+    }
+
+  }, function(err, result) {
+    if (err) return next(err);
+    //4* respond data in JSON format so we can feed it to our AJAX call custom.js file in the feature.
+    res.json(result); //returning json formatted data (reference ajax call in custom.js)
+  });
+});
+
 
 router.get('/:name', function(req, res, next) {//1**search category based on name WE type in the url
 
