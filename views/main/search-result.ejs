@@ -1,0 +1,45 @@
+<!-- We added the database on the data we supplied in the search .get route...
+
+main-route.js
+
+router.get('/search', function(req, res, next) { //RETREIVE data from post route above..
+  if (req.query.q) {
+    Product.search({ //search the req.query value
+      query_string: {
+        query: req.query.q //it will search ElasticSeach replica set
+      }
+    },
+and then we FIRST..  -->
+<% layout('layout') -%>
+
+<% if (data.length === 0)  { %> <!-- //FIRST validate the data found or not found?-->
+  <h3>Search not found</h3>
+<% } else {%>
+  <h3>Results for <%= query %></h3>
+  <div class="container">
+  <div class="row">
+    
+    <% for (var i = 0; i < data.length; i++) { %> <!-- //SECOND if data is found.. LOOP the array and render it -->
+    
+    <div class="col-md-4">
+    
+      <a href="/product/<%= data[i]._source._id %>">
+    
+        <div class="thumbnail">
+    
+         <img src="<%= data[i]._source.image %>">
+  
+          <div class="caption">
+            <h3><%= data[i]._source.name %></h3>
+            <p><%= data[i]._source.category.name %></h3>
+            <p>$<%= data[i]._source.price %></p>
+  
+          </div>
+        </div>
+      </a>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<% } %>
