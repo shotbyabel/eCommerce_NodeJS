@@ -15,6 +15,8 @@ var express       = require('express'),
     Category      = require('./models/category'),
     Product       = require('./models/product'),
 
+    cartLength    = require('./middleware/middlewares'),
+
     app           = express();//app is refering to the express object.
 
     mongoose.connect(secret.database, function(err) {
@@ -49,6 +51,8 @@ app.use(function(req, res, next) {
   res.locals.user = req.user;
   next();
 });
+//middlewaresL cart
+app.use(cartLength);
 
 //middleware for category queries
 app.use(function(req, res, next) {

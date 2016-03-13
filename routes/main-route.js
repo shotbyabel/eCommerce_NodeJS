@@ -1,6 +1,7 @@
 var router    = require('express').Router();
 var User      = require('../models/user');
 var Product   = require('../models/product');
+var Cart      = require('../models/cart');
 
 function paginate(req, res, next) {
 
@@ -34,6 +35,7 @@ Product.createMapping(function(err, mapping) {
     console.log(mapping);
   }
 });
+
 // //THREE methods.. count the docs..close the count.. errors
 var stream = Product.synchronize(); //syncs whole product in the elastic search replica set(replicate all data and put in in Elasti Search)
 var count = 0;
@@ -49,6 +51,66 @@ stream.on('close', function() {
 stream.on('error', function(err) {
   console.log(err);
 });
+
+//////////////////////////////////////////////////////////
+//C A R T - R O U T E S:
+
+router.get('/cart', function(req, res, next) {
+  Cart
+  //SEARCH in the db if  req.user._id exist or not
+    .findOne({
+      owner: req.user._id
+    })
+    .populate('items.item')//populate image, name, price 
+    .exec(function(err, foundCart) {
+      if (err) return next(err);
+      res.render('main/cart', {//render view of the owner/user cart
+        foundCart: foundCart,//we are looping cart object in cart.ejs
+        message: req.flash('remove')
+      });
+    });
+});
+
+//this POST Method will run when user push "Add to Cart" button on product.ejs
+router.post('/product/:product_id', function(req, res, next) {
+      //find owner of the cart!
+      Cart.findOne({
+          owner: req.user._id
+        }, function(err, cart) {
+          cart.items.push({ //push items based on req.body we want to buy (item is an array)
+            item: req.body.product_id,
+            price: parseInt(req.body.priceValue), //parseInt
+            quantity: parseInt(req.body.quantity)
+          });
+          //parse value of the req.body to a float data type: saving to DB wont show errors(playing it safe)
+          cart.total = (cart.total + parseFloat(req.body.priceValue)).toFixed(2);
+          //save it to the cart DB
+          cart.save(function(err) {
+            if (err) return next(err);
+            return res.redirect('/cart');
+          });
+        });
+      });
+
+//Remove Item from CART Route
+
+router.post('/remove', function(req, res, next) {
+  //*ir order to remove the item we must get it's _id
+  Cart.findOne({
+     owner: req.user._id
+  }, function(err, foundCart) {
+    //once the item is found we pull it.. 
+    foundCart.items.pull(String(req.body.item));
+//subtract the total price once item has been removed from cart
+    foundCart.total = (foundCart.total - parseFloat(req.body.price)).toFixed(2);
+    foundCart.save(function(err, found) {
+      if (err) return next(err);
+      req.flash('remove', 'Item was removed from your cart');
+      res.redirect('/cart');
+    });
+  });
+});
+
 //////////////////////////////////////////////////////////
 //S E A R C H  R O U T E S: go to search route and pass req.body.q.
 router.post('/search', function(req, res, next) {
