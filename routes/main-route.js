@@ -3,6 +3,10 @@ var User      = require('../models/user');
 var Product   = require('../models/product');
 var Cart      = require('../models/cart');
 
+var stripe    = require('stripe') ('sk_test_9ALQ3o2Sa4ABdNfqePQHOjZa');
+
+
+
 function paginate(req, res, next) {
 
   var perPage = 9;
@@ -182,6 +186,24 @@ router.get('/product/:id', function(req, res, next) {//QUERY based on id(particu
     if (err) return next(err);
     res.render('main/product', {
       product: product
+    });
+  });
+});
+
+//S T R I P E - R O U T E
+
+router.post('/payment', function(req, res, mext) {
+
+  var stripToken = req.body.stripToken;//get strip Token from Client-side
+  var currentCharges = Math.round(req.body.stripeMoney * 100);//we r timing by 100(cents)
+  stripe.customers.create({//stripe method to create customers..
+    source: stripToken,
+
+  }).then(function(customer) {//promise handler
+    return stripe.charges.create({//add all the info to charge the customer..
+      amount: currentCharges,
+      currency: 'usd',
+      customer: customer.id
     });
   });
 });
