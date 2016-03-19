@@ -206,6 +206,8 @@ router.post('/payment', function(req, res, mext) {
       customer: customer.id
     });
   });
+  //redirect user to their profile after payment has been SUCCESSFUL
+  res.redirect('/profile');
 });
 
 module.exports = router;

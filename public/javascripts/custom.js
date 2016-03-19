@@ -1,6 +1,9 @@
 (function() {
   'use strict';
 
+  Stripe.setPublishableKey('pk_test_rKmTS7xeRVDUEOdBdPjB9EAS');
+
+
   $(function() {
     //**1 when user types something it will run an ajax call::
     $('#search').keyup(function() {
@@ -87,6 +90,37 @@
     // $('#priceValue').val(priceValue.toFixed(2));
     $('#total').html(quantity); //show user what's the current quanity amount.  
 
+  });
+
+////////////////////////////
+ ////S T R I P E  FORM
+// we take all the inputs from this form by attacking it to an id and a var
+  function stripeResponseHandler(status, response) {
+    var $form = $('#payment-form');//form id from cart.ejs
+
+    if (response.error) {
+      // Show the errors on the form
+      $form.find('.payment-errors').text(response.error.message);//this class is on the form in cart.ejs
+      $form.find('button').prop('disabled', false);
+    } else {
+      // response contains id and card, which contains additional card details
+      var token = response.id;
+      // Insert the token into the form so it gets submitted to the server
+      $form.append($('<input type="hidden" name="stripeToken" />').val(token));//from main-routes var stripeToken
+      // and submit
+      $form.get(0).submit();
+    }
+  };
+
+ //jQuery single use token **Invoke Stripe Response handler function**
+ 
+  $('#payment-form').submit(function(event) {
+    var $form = $(this);
+    // Disable the submit button to prevent repeated clicks
+    $form.find('button').prop('disabled', true);
+    Stripe.card.createToken($form, stripeResponseHandler);
+    // Prevent the form from submitting with the default action
+    return false;
   });
 
 
