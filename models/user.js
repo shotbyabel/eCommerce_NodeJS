@@ -8,7 +8,8 @@ var UserSchema = new Schema({
 
   email: {
     type: String,
-    unique: true
+    unique: true,
+    lowercase: true
   },
   password: String,
 
@@ -21,17 +22,18 @@ var UserSchema = new Schema({
       type: String,
       default: ''
     }
-
   },
 
   address: String,
   history: [{
-    date: Date,
     paid: {
       type: Number,
       default: 0
     },
-    // item: { type: Schema.Types.ObjectId, ref: ''} //
+    item: {//this was added when we finished our /payment route with the async functions
+      type: Schema.Types.ObjectId,
+      ref: 'Product'
+    }
   }]
 });
 

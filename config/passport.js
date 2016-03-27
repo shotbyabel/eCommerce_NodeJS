@@ -38,6 +38,8 @@ passport.use('local-login', new LocalStrategy({ //add an instance of localStrate
 
 
 //F U N C T I O N for V A L I D A T I O N 
+//**we added this middleware over at the user-route.js (`router.post('/login', `)
+//USER has to be authenticated in order to enter this route..
 exports.isAuthenticated = function(req, res, next) {
   if (req.isAuthenticated()) {
     return next();

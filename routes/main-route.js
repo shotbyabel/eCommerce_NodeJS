@@ -2,6 +2,7 @@ var router    = require('express').Router();
 var User      = require('../models/user');
 var Product   = require('../models/product');
 var Cart      = require('../models/cart');
+var async     = require('async');
 
 var stripe    = require('stripe') ('sk_test_9ALQ3o2Sa4ABdNfqePQHOjZa');
 
@@ -192,22 +193,70 @@ router.get('/product/:id', function(req, res, next) {//QUERY based on id(particu
 
 //S T R I P E - R O U T E
 
-router.post('/payment', function(req, res, mext) {
+router.post('/payment', function(req, res, next) {
 
-  var stripToken = req.body.stripToken;//get strip Token from Client-side
-  var currentCharges = Math.round(req.body.stripeMoney * 100);//we r timing by 100(cents)
-  stripe.customers.create({//stripe method to create customers..
+  var stripToken = req.body.stripToken; //get strip Token from Client-side
+  var currentCharges = Math.round(req.body.stripeMoney * 100); //we r timing by 100(cents)
+  stripe.customers.create({ //stripe method to create customers..
     source: stripToken,
 
-  }).then(function(customer) {//promise handler
-    return stripe.charges.create({//add all the info to charge the customer..
+  }).then(function(customer) { //promise handler
+    return stripe.charges.create({ //add all the info to charge the customer..
       amount: currentCharges,
       currency: 'usd',
       customer: customer.id
     });
+  }).then(function(charge) { //refactor here with async *starts* .then
+//////////////////////////////////////////////////////////
+//////async library waterfall method w/3 functions inside
+    async.waterfall([
+//**1**search for the cart      
+      function(callback) {
+        Cart.findOne({ //found the cart! let's pass it down to the next function
+          owner: req.user._id
+        }, function(err, cart) {
+          callback(err, cart);//pass the 2nd argument 'cart' to our **2nd** function
+        });
+      },
+//**2** 'cart' is passed search for the User!         
+      function(cart, callback) {
+        User.findOne({
+          _id: req.user._id
+        }, function(err, user) { //pass user to our **3rd funtion**
+          //IF user does exist, we forLoop the end/length
+          if (user) {
+            for (var i = 0; i < cart.items.length; i++) {
+              //for every loop we want to push/add the following params to the users history:(we uncommented items in the user models)
+              user.history.push({//all these params and values are from our User Schema.. models
+                item: cart.items[i].item,
+                paid: cart.items[i].price
+              });
+            }
+//after we add/push items and prices SAVE the user..
+            user.save(function(err, user) { //pass user to our **3rd funtion**
+              if (err) return next(err);
+              callback(err, user);
+            });
+          }
+        });
+      }, 
+//**3**  finally Update the user's cart!        
+      function(user) {
+        Cart.update({
+          owner: user._id
+        }, {
+          $set: { //$set is the same as `cart.items = []`
+            items: [],
+            total: 0 //after payment is clear price goes back to ZERO
+          }
+        }, function(err, updated) {
+          if (updated) {
+            res.redirect('/profile');
+          }
+        });
+      }
+    ]);
   });
-  //redirect user to their profile after payment has been SUCCESSFUL
-  res.redirect('/profile');
 });
 
 module.exports = router;
