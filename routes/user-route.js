@@ -8,28 +8,44 @@ var router        = require('express').Router(),
     passportConf  = require('../config/passport');  
 
 //L O G I N - R O U T E S
-router.get('/login', function(req, res) {//
-  if (req.user) return res.redirect('/');//if request is user send them to the home route
-  res.render('accounts/login', { message: req.flash('loginMessage')});
+router.get('/login', function(req, res) { //
+  if (req.user) return res.redirect('/'); //if request is user send them to the home route
+  res.render('accounts/login', {
+    message: req.flash('loginMessage')
+  });
 });
 
-router.post('/login', passport.authenticate('local-login', {//using middleware from passport.js
+router.post('/login', passport.authenticate('local-login', { //using middleware from passport.js
   successRedirect: '/profile', //User.findOne function logic from passport.js
-  failureRedirect:'/login',
+  failureRedirect: '/login',
   failureFlash: true
 }));
 
-//User login route to profile
-router.get('/profile', function(req, res, next) { 
-  User.findOne({ //call to database to and check if this user id excist..
-    _id: req.user._id
-  }, function(err, user) { // if it does not error
-    if (err) return next(err);
-    res.render('accounts/profile', { //if user exist render their profike
-      user: user
+//User login route to profile - REFACTORY after stripe payment
+router.get('/profile', passportConf.isAuthenticated, function(req, res, next) {//using middleware from passport.js
+//isAuthenticated middleware validates user so that they have to be signed in to go to /profile!   
+  User
+    .findOne({
+      _id: req.user._id
+    })
+    .populate('history.item')//this is from our user models
+    .exec(function(err, foundUser) {
+      if (err) return next(err);
+
+      res.render('accounts/profile', {
+        user: foundUser
+      });
     });
-  });
 });
+  // User.findOne({ //call to database to and check if this user id excist..
+  //   _id: req.user._id
+  // }, function(err, user) { // if it does not error
+  //   if (err) return next(err);
+  //   res.render('accounts/profile', { //if user exist render their profike
+  //     user: user
+  //   });
+  // });
+
 // router.get('/profile', function(req, res) {
 //   res.json(req.user);
 // })
