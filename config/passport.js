@@ -1,7 +1,13 @@
 //IGNORE THIS
-var passport      = require('passport'), //authentication
-    LocalStrategy = require('passport-local').Strategy; //for local login
-    User          = require('../models/user');
+var passport          = require('passport'), //authentication
+    LocalStrategy     = require('passport-local').Strategy, //for local login
+    FacebookStrategy  = require('passport-facebook').Strategy,
+    secret            = require('../config/secret'),
+    User              = require('../models/user'),
+
+    async             = require('async'),
+    Cart              = require('../models/cart');
+
 
 
 // S E R I A L I Z E  && D E S E R I A L I Z E
@@ -34,6 +40,56 @@ passport.use('local-login', new LocalStrategy({ //add an instance of localStrate
       return done(null, user);
   });
 
+}));
+
+
+//F A C E B O O K - OAUTH - M I D D L E W A R E 
+//show passport how to auth w/facebook (pass in facebook object info) callback function..
+passport.use(new FacebookStrategy(secret.facebook, function(token, refreshToken, profile, done) {
+  User.findOne({
+    facebook: profile.id
+  }, function(err, user) {
+    if (err) return done(err);
+
+    if (user) {
+      return done(null, user);
+
+    } else {
+      //facebook user cart refactor w/async waterfall
+      async.waterfall([
+          function(callback) { //1 create new user object 
+            var newUser = new User();
+            newUser.email = profile._json.email; //data
+            newUser.facebook = profile.id;
+            newUser.tokens.push({
+              kind: 'facebook',
+              token: token
+            });
+            newUser.profile.name = profile.displayName; //set their display name
+            newUser.profile.picture = 'https://graph.facebook.com/' + profile.id + '/picture?type=large';
+
+            newUser.save(function(err) {
+              if (err) throw err;
+            //2. call back with a new users object to the next function     
+              callback(err, newUser);
+            });
+
+          },
+            //3. create a new Cart object and set it to the new user_id 
+          function(newUser) { //pass new FB user id and pass it to the cart
+            var cart = new Cart();
+            cart.owner = newUser._id;
+            //save cart
+            cart.save(function(err) {
+              if (err) return done(err);
+              //5. callback w/ new user object so route can auth and redirect user
+              return done(err, newUser)
+            })
+          },
+        ]) //waterfall END   
+
+    }
+  });
 }));
 
 

@@ -134,6 +134,17 @@ router.post('/edit-profile', function(req, res, next) {
   });
 });
 
+//F A C E B O O K 
+//sends user to FB.com to do Auth 
+router.get('/auth/facebook', passport.authenticate('facebook', {//config/passport.js
+  scope: 'email'//what info do we want from FB? //secret.js (can add MORE scopes)
+}));
+//handle callback: after FB has authenticated user: redict them to profile OR login... 
+router.get('/auth/facebook/callback', passport.authenticate('facebook', {
+  successRedirect: '/profile',
+  failureRedirect: '/login'
+}));
+
 
 
 
