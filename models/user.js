@@ -13,6 +13,9 @@ var UserSchema = new Schema({
   },
   password: String,
 
+  facebook: String,//passport.js
+  tokens: Array,
+
   profile: {
     name: {
       type: String,
